@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>파일 미리보기 시스템</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body, html { height: 100%; font-family: 'Segoe UI', sans-serif; }
+    .container { display: flex; height: 100%; }
+    .sidebar {
+      width: 250px;
+      background: #f1f1f1;
+      border-right: 1px solid #ccc;
+      padding: 1rem;
+      overflow-y: auto;
+    }
+    .sidebar h2 { font-size: 1.2rem; margin-bottom: 1rem; }
+    .file-item {
+      cursor: pointer;
+      padding: 0.5rem;
+      margin-bottom: 0.5rem;
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      transition: 0.2s;
+    }
+    .file-item:hover {
+      background: #e0f0ff;
+    }
+    .viewer {
+      flex-grow: 1;
+      padding: 1rem;
+      background: #fafafa;
+    }
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+    .error {
+      color: #999;
+      text-align: center;
+      padding: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- 좌측 목록 -->
+    <div class="sidebar">
+      <h2>파일 목록</h2>
+      <div class="file-item" data-path="pdfs/window.pdf" data-name="샘플 PDF">샘플 PDF</div>
+      <div class="file-item" data-path="ppts/sql.pptx" data-name="제품 설명서">제품 설명서</div>
+      <div class="file-item" data-path="excels/sample.xlsx" data-name="매출 보고서">매출 보고서</div>
+      <div class="file-item" data-path="others/manual.hwp" data-name="사내 메뉴얼">사내 메뉴얼</div>
+    </div>
+
+    <!-- 우측 뷰어 -->
+    <div class="viewer" id="viewer">
+      <div class="error">좌측에서 파일을 선택해주세요.</div>
+    </div>
+  </div>
+
+  <script>
+    function getExtension(filename) {
+      return filename.split('.').pop().toLowerCase();
+    }
+
+    function showFile(filePath, fileName) {
+      const ext = getExtension(filePath);
+      const viewer = document.getElementById('viewer');
+
+      const basePath = location.origin + location.pathname.replace(/\/[^\/]*$/, '/');
+      const fullPath = basePath + filePath;
+      console.log(fullPath);
+      const encoded = encodeURIComponent(fullPath);
+      console.log(encoded);
+
+      let iframeSrc = '';
+      if (ext === 'pdf') {
+        iframeSrc = filePath;
+      } else if (['ppt', 'pptx', 'xls', 'xlsx'].includes(ext)) {
+        iframeSrc = `https://view.officeapps.live.com/op/embed.aspx?src=${encoded}`;
+      } else if (ext === 'hwp') {
+        viewer.innerHTML = `<div class="error">HWP 문서는 웹 미리보기를 지원하지 않습니다.<br>파일명: ${fileName}</div>`;
+        return;
+      } else {
+        viewer.innerHTML = `<div class="error">지원하지 않는 형식입니다: ${ext}</div>`;
+        return;
+      }
+
+      viewer.innerHTML = `<iframe src="${iframeSrc}"></iframe>`;
+    }
+
+    // 파일 클릭 이벤트
+    document.querySelectorAll('.file-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const filePath = item.dataset.path;
+        const fileName = item.dataset.name;
+        showFile(filePath, fileName);
+      });
+    });
+  </script>
+</body>
+</html>
